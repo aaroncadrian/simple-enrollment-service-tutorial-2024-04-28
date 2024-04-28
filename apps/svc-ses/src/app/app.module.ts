@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { EnrollmentsController } from './controllers/enrollments.controller';
 
 @Module({
-  controllers: [],
+  controllers: [EnrollmentsController],
   providers: [
     {
       provide: DynamoDBClient,
