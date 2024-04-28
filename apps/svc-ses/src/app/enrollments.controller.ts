@@ -11,15 +11,20 @@ import {
   ListEnrollmentsCommandInput,
   ListEnrollmentsCommandOutput,
 } from './commands/list-enrollments.command';
+import {
+  CreateEnrollmentCommandInput,
+  CreateEnrollmentCommandOutput,
+} from './commands/create-enrollment.command';
 
 @Controller()
 export class EnrollmentsController {
   constructor(private dynamo: DynamoDBClient) {}
 
   @Post('CreateEnrollment')
-  async CreateEnrollment() {
-    const rosterId = 'walt-disney-apartment-tour-monday-2pm';
-    const personId = 'aaron';
+  async CreateEnrollment(
+    @Body() input: CreateEnrollmentCommandInput
+  ): Promise<CreateEnrollmentCommandOutput> {
+    const { rosterId, personId } = input;
 
     const currentTimestamp = new Date().toISOString();
 
@@ -29,7 +34,7 @@ export class EnrollmentsController {
       createdAt: currentTimestamp,
     };
 
-    const result = await this.dynamo.send(
+    await this.dynamo.send(
       new PutItemCommand({
         TableName: 'local.ses-01',
         Item: marshall({
@@ -42,7 +47,6 @@ export class EnrollmentsController {
 
     return {
       enrollment,
-      result,
     };
   }
 
