@@ -1,0 +1,24 @@
+{
+  "name": "svc-ses",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/svc-ses/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "svc-ses:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "svc-ses:build:development"
+        },
+        "production": {
+          "buildTarget": "svc-ses:build:production"
+        }
+      }
+    }
+  }
+}
