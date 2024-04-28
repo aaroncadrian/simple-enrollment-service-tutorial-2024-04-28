@@ -5,5 +5,5 @@ export type CreateRosterGroupCommandInput = {
 };
 
 export type CreateRosterGroupCommandOutput = {
-  roster: RosterGroup;
+  group: RosterGroup;
 };

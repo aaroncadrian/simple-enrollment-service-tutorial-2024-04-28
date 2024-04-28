@@ -5,5 +5,5 @@ export type DescribeRosterGroupCommandInput = {
 };
 
 export type DescribeRosterGroupCommandOutput = {
-  roster: RosterGroup;
+  group: RosterGroup;
 };

@@ -5,5 +5,5 @@ export type DeleteRosterGroupCommandInput = {
 };
 
 export type DeleteRosterGroupCommandOutput = {
-  roster: RosterGroup;
+  group: RosterGroup;
 };
