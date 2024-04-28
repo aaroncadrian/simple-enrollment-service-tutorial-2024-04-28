@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import {
   DeleteItemCommand,
   DynamoDBClient,
+  GetItemCommand,
   PutItemCommand,
   QueryCommand,
 } from '@aws-sdk/client-dynamodb';
@@ -20,6 +21,10 @@ import {
   DeleteEnrollmentCommandInput,
   DeleteEnrollmentCommandOutput,
 } from './commands/delete-enrollment.command';
+import {
+  GetEnrollmentCommandInput,
+  GetEnrollmentCommandOutput,
+} from './commands/get-enrollment.command';
 
 @Controller()
 export class EnrollmentsController {
@@ -50,6 +55,35 @@ export class EnrollmentsController {
 
     return {
       enrollments,
+    };
+  }
+
+  @Post('GetEnrollment')
+  async GetEnrollment(
+    @Body() input: GetEnrollmentCommandInput
+  ): Promise<GetEnrollmentCommandOutput> {
+    const { rosterId, personId } = input;
+
+    const result = await this.dynamo.send(
+      new GetItemCommand({
+        TableName: 'local.ses-01',
+        Key: marshall({
+          pk: rosterId,
+          sk: personId,
+        }),
+      })
+    );
+
+    const item = result.Item;
+
+    if (!item) {
+      throw new BadRequestException('Enrollment Not Found');
+    }
+
+    const enrollment = stripPkSk(unmarshall(item) as any) as Enrollment;
+
+    return {
+      enrollment,
     };
   }
 
