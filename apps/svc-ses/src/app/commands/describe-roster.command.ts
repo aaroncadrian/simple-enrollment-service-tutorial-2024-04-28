@@ -1,9 +1,9 @@
 import { Roster } from '../models/roster.model';
 
-export type GetRosterCommandInput = {
+export type DescribeRosterCommandInput = {
   rosterId: string;
 };
 
-export type GetRosterCommandOutput = {
+export type DescribeRosterCommandOutput = {
   roster: Roster;
 };

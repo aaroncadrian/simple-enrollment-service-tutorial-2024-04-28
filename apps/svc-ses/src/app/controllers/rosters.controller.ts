@@ -15,9 +15,9 @@ import {
 } from '../commands/delete-roster.command';
 import { Roster } from '../models/roster.model';
 import {
-  GetRosterCommandInput,
-  GetRosterCommandOutput,
-} from '../commands/get-roster.command';
+  DescribeRosterCommandInput,
+  DescribeRosterCommandOutput,
+} from '../commands/describe-roster.command';
 
 @Controller()
 export class RostersController {
@@ -34,10 +34,10 @@ export class RostersController {
     };
   }
 
-  @Post('GetRoster')
-  async GetRoster(
-    @Body() input: GetRosterCommandInput
-  ): Promise<GetRosterCommandOutput> {
+  @Post('DescribeRoster')
+  async DescribeRoster(
+    @Body() input: DescribeRosterCommandInput
+  ): Promise<DescribeRosterCommandOutput> {
     const { rosterId } = input;
 
     const roster = {} as Roster;
