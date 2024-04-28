@@ -1,5 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import {
+  DeleteItemCommand,
   DynamoDBClient,
   PutItemCommand,
   QueryCommand,
@@ -15,6 +16,10 @@ import {
   CreateEnrollmentCommandInput,
   CreateEnrollmentCommandOutput,
 } from './commands/create-enrollment.command';
+import {
+  DeleteEnrollmentCommandInput,
+  DeleteEnrollmentCommandOutput,
+} from './commands/delete-enrollment.command';
 
 @Controller()
 export class EnrollmentsController {
@@ -72,6 +77,32 @@ export class EnrollmentsController {
         }),
       })
     );
+
+    return {
+      enrollment,
+    };
+  }
+
+  @Post('DeleteEnrollment')
+  async DeleteEnrollment(
+    @Body() input: DeleteEnrollmentCommandInput
+  ): Promise<DeleteEnrollmentCommandOutput> {
+    const { rosterId, personId } = input;
+
+    const result = await this.dynamo.send(
+      new DeleteItemCommand({
+        ReturnValues: 'ALL_OLD',
+        TableName: 'local.ses-01',
+        Key: marshall({
+          pk: rosterId,
+          sk: personId,
+        }),
+      })
+    );
+
+    const enrollment = stripPkSk(
+      unmarshall(result.Attributes) as any
+    ) as Enrollment;
 
     return {
       enrollment,
