@@ -20,6 +20,34 @@ import {
 export class EnrollmentsController {
   constructor(private dynamo: DynamoDBClient) {}
 
+  @Post('ListEnrollments')
+  async ListEnrollments(
+    @Body() input: ListEnrollmentsCommandInput
+  ): Promise<ListEnrollmentsCommandOutput> {
+    const { rosterId } = input;
+
+    const result = await this.dynamo.send(
+      new QueryCommand({
+        TableName: 'local.ses-01',
+        KeyConditionExpression: '#pk = :pk',
+        ExpressionAttributeNames: {
+          '#pk': 'pk',
+        },
+        ExpressionAttributeValues: marshall({
+          ':pk': rosterId,
+        }),
+      })
+    );
+
+    const enrollments: Enrollment[] = result.Items.map(
+      (item) => stripPkSk(unmarshall(item) as any) as Enrollment
+    );
+
+    return {
+      enrollments,
+    };
+  }
+
   @Post('CreateEnrollment')
   async CreateEnrollment(
     @Body() input: CreateEnrollmentCommandInput
@@ -47,34 +75,6 @@ export class EnrollmentsController {
 
     return {
       enrollment,
-    };
-  }
-
-  @Post('ListEnrollments')
-  async ListEnrollments(
-    @Body() input: ListEnrollmentsCommandInput
-  ): Promise<ListEnrollmentsCommandOutput> {
-    const { rosterId } = input;
-
-    const result = await this.dynamo.send(
-      new QueryCommand({
-        TableName: 'local.ses-01',
-        KeyConditionExpression: '#pk = :pk',
-        ExpressionAttributeNames: {
-          '#pk': 'pk',
-        },
-        ExpressionAttributeValues: marshall({
-          ':pk': rosterId,
-        }),
-      })
-    );
-
-    const enrollments: Enrollment[] = result.Items.map(
-      (item) => stripPkSk(unmarshall(item) as any) as Enrollment
-    );
-
-    return {
-      enrollments,
     };
   }
 }
