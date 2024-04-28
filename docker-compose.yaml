@@ -1,0 +1,11 @@
+# Source: https://stackoverflow.com/questions/69941444/how-to-have-docker-compose-init-a-sql-server-database
+
+version: '3'
+
+services:
+  dynamodb-local:
+    command: '-jar DynamoDBLocal.jar -sharedDb'
+    image: 'amazon/dynamodb-local:latest'
+    container_name: 'ddb-ses-2024-04-28'
+    ports:
+      - '8000:8000'
