@@ -1,7 +1,12 @@
 import { Controller, Post } from '@nestjs/common';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
-import { marshall } from '@aws-sdk/util-dynamodb';
+import {
+  DynamoDBClient,
+  PutItemCommand,
+  QueryCommand,
+} from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Enrollment } from './models/enrollment.model';
+import { stripPkSk } from './utils/strip-pk-sk';
 
 @Controller()
 export class EnrollmentsController {
@@ -34,6 +39,32 @@ export class EnrollmentsController {
     return {
       enrollment,
       result,
+    };
+  }
+
+  @Post('ListEnrollments')
+  async ListEnrollments() {
+    const rosterId = 'walt-disney-apartment-tour-monday-2pm';
+
+    const result = await this.dynamo.send(
+      new QueryCommand({
+        TableName: 'local.ses-01',
+        KeyConditionExpression: '#pk = :pk',
+        ExpressionAttributeNames: {
+          '#pk': 'pk',
+        },
+        ExpressionAttributeValues: marshall({
+          ':pk': rosterId,
+        }),
+      })
+    );
+
+    const enrollments: Enrollment[] = result.Items.map(
+      (item) => stripPkSk(unmarshall(item) as any) as Enrollment
+    );
+
+    return {
+      enrollments,
     };
   }
 }
