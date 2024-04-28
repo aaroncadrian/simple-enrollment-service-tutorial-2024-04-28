@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
-
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 @Module({
   imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [
+    {
+      provide: DynamoDBClient,
+      useValue: new DynamoDBClient({
+        region: 'us-west-2',
+        endpoint: 'http://localhost:8000',
+      }),
+    },
+  ],
 })
 export class AppModule {}
