@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 @Module({
-  imports: [],
   controllers: [],
   providers: [
     {
