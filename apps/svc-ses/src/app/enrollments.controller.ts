@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import {
   DynamoDBClient,
   PutItemCommand,
@@ -7,6 +7,10 @@ import {
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Enrollment } from './models/enrollment.model';
 import { stripPkSk } from './utils/strip-pk-sk';
+import {
+  ListEnrollmentsCommandInput,
+  ListEnrollmentsCommandOutput,
+} from './commands/list-enrollments.command';
 
 @Controller()
 export class EnrollmentsController {
@@ -43,8 +47,10 @@ export class EnrollmentsController {
   }
 
   @Post('ListEnrollments')
-  async ListEnrollments() {
-    const rosterId = 'walt-disney-apartment-tour-monday-2pm';
+  async ListEnrollments(
+    @Body() input: ListEnrollmentsCommandInput
+  ): Promise<ListEnrollmentsCommandOutput> {
+    const { rosterId } = input;
 
     const result = await this.dynamo.send(
       new QueryCommand({
