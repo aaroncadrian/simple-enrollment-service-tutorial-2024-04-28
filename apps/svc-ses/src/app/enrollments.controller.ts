@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import {
   DeleteItemCommand,
   DynamoDBClient,
@@ -89,16 +89,28 @@ export class EnrollmentsController {
   ): Promise<DeleteEnrollmentCommandOutput> {
     const { rosterId, personId } = input;
 
-    const result = await this.dynamo.send(
-      new DeleteItemCommand({
-        ReturnValues: 'ALL_OLD',
-        TableName: 'local.ses-01',
-        Key: marshall({
-          pk: rosterId,
-          sk: personId,
-        }),
-      })
-    );
+    const result = await this.dynamo
+      .send(
+        new DeleteItemCommand({
+          ReturnValues: 'ALL_OLD',
+          TableName: 'local.ses-01',
+          Key: marshall({
+            pk: rosterId,
+            sk: personId,
+          }),
+          ConditionExpression: 'attribute_exists(#pk)',
+          ExpressionAttributeNames: {
+            '#pk': 'pk',
+          },
+        })
+      )
+      .catch((error) => {
+        if (error.name === 'ConditionalCheckFailedException') {
+          throw new BadRequestException('Enrollment Not Found');
+        }
+
+        throw error;
+      });
 
     const enrollment = stripPkSk(
       unmarshall(result.Attributes) as any
