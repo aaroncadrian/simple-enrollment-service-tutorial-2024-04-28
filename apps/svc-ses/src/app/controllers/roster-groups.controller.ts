@@ -13,7 +13,7 @@ import {
   DeleteRosterGroupCommandInput,
   DeleteRosterGroupCommandOutput,
 } from '../commands/delete-roster-group.command';
-import { RosterGroup } from '../models/roster-group.model';
+import { RosterGroupDescription } from '../models/roster-group.model';
 import {
   DescribeRosterGroupCommandInput,
   DescribeRosterGroupCommandOutput,
@@ -40,12 +40,12 @@ export class RosterGroupsController {
   ): Promise<DescribeRosterGroupCommandOutput> {
     const { groupId } = input;
 
-    const group = {} as RosterGroup;
+    const groupDescription = {} as RosterGroupDescription;
 
     // const result = await this.dynamo.send(new QueryCommand({}));
 
     return {
-      group,
+      groupDescription,
     };
   }
 
@@ -57,7 +57,7 @@ export class RosterGroupsController {
 
     const currentTimestamp = getCurrentTimestamp();
 
-    const group: RosterGroup = {
+    const groupDescription: RosterGroupDescription = {
       groupId,
       createdAt: currentTimestamp,
     };
@@ -67,7 +67,7 @@ export class RosterGroupsController {
     // }));
 
     return {
-      group,
+      groupDescription,
     };
   }
 
@@ -81,10 +81,11 @@ export class RosterGroupsController {
     //
     // }));
 
-    const group: RosterGroup = {} as RosterGroup;
+    const groupDescription: RosterGroupDescription =
+      {} as RosterGroupDescription;
 
     return {
-      group,
+      groupDescription,
     };
   }
 }

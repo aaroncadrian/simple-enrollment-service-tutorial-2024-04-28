@@ -1,9 +1,9 @@
-import { RosterGroup } from '../models/roster-group.model';
+import { RosterGroupDescription } from '../models/roster-group.model';
 
 export type DeleteRosterGroupCommandInput = {
   groupId: string;
 };
 
 export type DeleteRosterGroupCommandOutput = {
-  group: RosterGroup;
+  groupDescription: RosterGroupDescription;
 };

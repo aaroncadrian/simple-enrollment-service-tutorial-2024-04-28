@@ -1,5 +1,4 @@
-// TODO: Rename to RosterGroupDescription
-export type RosterGroup = {
+export type RosterGroupDescription = {
   groupId: string;
   createdAt: string;
 };
