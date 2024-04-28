@@ -1,4 +1,4 @@
-TableName: 'local.ses'
+TableName: 'local.ses-01'
 BillingMode: PAY_PER_REQUEST
 
 AttributeDefinitions:
