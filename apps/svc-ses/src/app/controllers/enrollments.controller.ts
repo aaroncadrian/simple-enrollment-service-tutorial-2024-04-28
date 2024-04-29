@@ -124,13 +124,15 @@ export class EnrollmentsController {
             },
             {
               Update: {
+                ReturnValuesOnConditionCheckFailure: 'ALL_OLD',
                 TableName: 'local.ses-01',
                 Key: marshall({
                   pk: rosterId,
                   sk: 'ENROLLMENT_TRACKER',
                 }),
                 UpdateExpression: 'ADD enrollmentIds :enrollmentIds',
-                ConditionExpression: 'size(enrollmentIds) < enrollmentLimit',
+                ConditionExpression:
+                  'attribute_not_exists(enrollmentIds) OR size(enrollmentIds) < enrollmentLimit',
                 ExpressionAttributeValues: marshall({
                   ':enrollmentIds': new Set([personId]),
                 }),
@@ -151,6 +153,8 @@ export class EnrollmentsController {
         })
       )
       .catch((error) => {
+        console.error(JSON.stringify(error, null, 2));
+
         if (isTransactionCanceledException(error)) {
           if (error.CancellationReasons[0].Code === 'ConditionalCheckFailed') {
             throw new BadRequestException('Roster Not Found');
