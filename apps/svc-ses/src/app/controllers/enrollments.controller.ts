@@ -3,7 +3,6 @@ import {
   DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
-  PutItemCommand,
   QueryCommand,
   TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb';
@@ -114,6 +113,16 @@ export class EnrollmentsController {
         new TransactWriteItemsCommand({
           TransactItems: [
             {
+              ConditionCheck: {
+                TableName: 'local.ses-01',
+                Key: marshall({
+                  pk: rosterId,
+                  sk: 'DESCRIPTION',
+                }),
+                ConditionExpression: 'attribute_exists(pk)',
+              },
+            },
+            {
               Put: {
                 TableName: 'local.ses-01',
                 Item: marshall({
@@ -129,7 +138,13 @@ export class EnrollmentsController {
       )
       .catch((error) => {
         if (isTransactionCanceledException(error)) {
-          throw new BadRequestException('Enrollment Already Exists');
+          if (error.CancellationReasons[0].Code === 'ConditionalCheckFailed') {
+            throw new BadRequestException('Roster Not Found');
+          }
+
+          if (error.CancellationReasons[1].Code === 'ConditionalCheckFailed') {
+            throw new BadRequestException('Enrollment Already Exists');
+          }
         }
 
         throw error;
