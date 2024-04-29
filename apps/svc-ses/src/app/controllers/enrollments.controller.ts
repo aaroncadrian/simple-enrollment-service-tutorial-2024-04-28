@@ -123,6 +123,20 @@ export class EnrollmentsController {
               },
             },
             {
+              Update: {
+                TableName: 'local.ses-01',
+                Key: marshall({
+                  pk: rosterId,
+                  sk: 'ENROLLMENT_TRACKER',
+                }),
+                UpdateExpression: 'ADD enrollmentIds :enrollmentIds',
+                ConditionExpression: 'size(enrollmentIds) < enrollmentLimit',
+                ExpressionAttributeValues: marshall({
+                  ':enrollmentIds': new Set([personId]),
+                }),
+              },
+            },
+            {
               Put: {
                 TableName: 'local.ses-01',
                 Item: marshall({
@@ -142,7 +156,7 @@ export class EnrollmentsController {
             throw new BadRequestException('Roster Not Found');
           }
 
-          if (error.CancellationReasons[1].Code === 'ConditionalCheckFailed') {
+          if (error.CancellationReasons[2].Code === 'ConditionalCheckFailed') {
             throw new BadRequestException('Enrollment Already Exists');
           }
         }
