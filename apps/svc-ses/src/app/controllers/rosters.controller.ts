@@ -8,7 +8,7 @@ import {
   CreateRosterCommandOutput,
 } from '../commands/create-roster.command';
 import { getCurrentTimestamp } from '../utils/get-current-timestamp';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import {
   DeleteRosterCommandInput,
   DeleteRosterCommandOutput,
@@ -18,6 +18,7 @@ import {
   DescribeRosterCommandInput,
   DescribeRosterCommandOutput,
 } from '../commands/describe-roster.command';
+import { marshall } from '@aws-sdk/util-dynamodb';
 
 @Controller()
 export class RostersController {
@@ -53,21 +54,26 @@ export class RostersController {
   async CreateRoster(
     @Body() input: CreateRosterCommandInput
   ): Promise<CreateRosterCommandOutput> {
-    const { rosterId } = input;
+    const { rosterId, enrollmentLimit } = input;
 
-    const currentTimestamp = getCurrentTimestamp();
-
-    const roster: RosterDescription = {
+    const rosterDescription: RosterDescription = {
       rosterId,
-      createdAt: currentTimestamp,
+      enrollmentLimit,
     };
 
-    // await this.dynamo.send(new PutItemCommand({
-    //
-    // }));
+    await this.dynamo.send(
+      new PutItemCommand({
+        TableName: 'local.ses-01',
+        Item: marshall({
+          pk: rosterId,
+          sk: 'DESCRIPTION',
+          ...rosterDescription,
+        }),
+      })
+    );
 
     return {
-      roster,
+      rosterDescription,
     };
   }
 
