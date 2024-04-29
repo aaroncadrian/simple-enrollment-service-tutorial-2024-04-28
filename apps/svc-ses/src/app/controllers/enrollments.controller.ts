@@ -1,6 +1,5 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import {
-  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   QueryCommand,
@@ -25,7 +24,6 @@ import {
   GetEnrollmentCommandInput,
   GetEnrollmentCommandOutput,
 } from '../commands/get-enrollment.command';
-import { isConditionalCheckFailedException } from '../utils/is-conditional-check-failed-exception';
 import { isTransactionCanceledException } from '../utils/is-transaction-canceled-exception';
 
 const ENROLLMENT = 'ENROLLMENT';
@@ -181,35 +179,49 @@ export class EnrollmentsController {
   ): Promise<DeleteEnrollmentCommandOutput> {
     const { rosterId, personId } = input;
 
-    const result = await this.dynamo
+    await this.dynamo
       .send(
-        new DeleteItemCommand({
-          ReturnValues: 'ALL_OLD',
-          TableName: 'local.ses-01',
-          Key: marshall({
-            pk: rosterId,
-            sk: `ENROLLMENT#${personId}`,
-          }),
-          ConditionExpression: 'attribute_exists(#pk)',
-          ExpressionAttributeNames: {
-            '#pk': 'pk',
-          },
+        new TransactWriteItemsCommand({
+          TransactItems: [
+            {
+              Delete: {
+                TableName: 'local.ses-01',
+                Key: marshall({
+                  pk: rosterId,
+                  sk: `ENROLLMENT#${personId}`,
+                }),
+                ConditionExpression: 'attribute_exists(#pk)',
+                ExpressionAttributeNames: {
+                  '#pk': 'pk',
+                },
+              },
+            },
+            {
+              Update: {
+                TableName: 'local.ses-01',
+                Key: marshall({
+                  pk: rosterId,
+                  sk: 'ENROLLMENT_TRACKER',
+                }),
+                UpdateExpression: 'DELETE enrollmentIds :enrollmentIds',
+                ExpressionAttributeValues: marshall({
+                  ':enrollmentIds': new Set([personId]),
+                }),
+              },
+            },
+          ],
         })
       )
       .catch((error) => {
-        if (isConditionalCheckFailedException(error)) {
+        if (isTransactionCanceledException(error)) {
           throw new BadRequestException('Enrollment Not Found');
         }
 
         throw error;
       });
 
-    const enrollment = stripPkSk(
-      unmarshall(result.Attributes) as any
-    ) as Enrollment;
-
     return {
-      enrollment,
+      success: true,
     };
   }
 }
