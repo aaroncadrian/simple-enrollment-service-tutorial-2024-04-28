@@ -25,6 +25,7 @@ import {
   GetEnrollmentCommandInput,
   GetEnrollmentCommandOutput,
 } from '../commands/get-enrollment.command';
+import { isConditionalCheckFailedException } from '../utils/is-conditional-check-failed-exception';
 
 const ENROLLMENT = 'ENROLLMENT';
 
@@ -106,16 +107,25 @@ export class EnrollmentsController {
       createdAt: currentTimestamp,
     };
 
-    await this.dynamo.send(
-      new PutItemCommand({
-        TableName: 'local.ses-01',
-        Item: marshall({
-          pk: rosterId,
-          sk: `ENROLLMENT#${personId}`,
-          ...enrollment,
-        }),
-      })
-    );
+    await this.dynamo
+      .send(
+        new PutItemCommand({
+          TableName: 'local.ses-01',
+          Item: marshall({
+            pk: rosterId,
+            sk: `ENROLLMENT#${personId}`,
+            ...enrollment,
+          }),
+          ConditionExpression: 'attribute_not_exists(pk)',
+        })
+      )
+      .catch((error) => {
+        if (isConditionalCheckFailedException(error)) {
+          throw new BadRequestException('Enrollment Already Exists');
+        }
+
+        throw error;
+      });
 
     return {
       enrollment,
@@ -144,7 +154,7 @@ export class EnrollmentsController {
         })
       )
       .catch((error) => {
-        if (error.name === 'ConditionalCheckFailedException') {
+        if (isConditionalCheckFailedException(error)) {
           throw new BadRequestException('Enrollment Not Found');
         }
 
