@@ -26,6 +26,8 @@ import {
   GetEnrollmentCommandOutput,
 } from '../commands/get-enrollment.command';
 
+const ENROLLMENT = 'ENROLLMENT';
+
 @Controller()
 export class EnrollmentsController {
   constructor(private dynamo: DynamoDBClient) {}
@@ -69,7 +71,7 @@ export class EnrollmentsController {
         TableName: 'local.ses-01',
         Key: marshall({
           pk: rosterId,
-          sk: personId,
+          sk: `${ENROLLMENT}#${personId}`,
         }),
       })
     );
@@ -106,7 +108,7 @@ export class EnrollmentsController {
         TableName: 'local.ses-01',
         Item: marshall({
           pk: rosterId,
-          sk: personId,
+          sk: `ENROLLMENT#${personId}`,
           ...enrollment,
         }),
       })
@@ -130,7 +132,7 @@ export class EnrollmentsController {
           TableName: 'local.ses-01',
           Key: marshall({
             pk: rosterId,
-            sk: personId,
+            sk: `ENROLLMENT#${personId}`,
           }),
           ConditionExpression: 'attribute_exists(#pk)',
           ExpressionAttributeNames: {
