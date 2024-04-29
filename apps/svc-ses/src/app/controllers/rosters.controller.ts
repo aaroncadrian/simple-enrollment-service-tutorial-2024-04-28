@@ -13,7 +13,7 @@ import {
   DeleteRosterCommandInput,
   DeleteRosterCommandOutput,
 } from '../commands/delete-roster.command';
-import { Roster } from '../models/roster.model';
+import { RosterDescription } from '../models/roster-description.model';
 import {
   DescribeRosterCommandInput,
   DescribeRosterCommandOutput,
@@ -40,7 +40,7 @@ export class RostersController {
   ): Promise<DescribeRosterCommandOutput> {
     const { rosterId } = input;
 
-    const roster = {} as Roster;
+    const roster = {} as RosterDescription;
 
     // const result = await this.dynamo.send(new QueryCommand({}));
 
@@ -57,7 +57,7 @@ export class RostersController {
 
     const currentTimestamp = getCurrentTimestamp();
 
-    const roster: Roster = {
+    const roster: RosterDescription = {
       rosterId,
       createdAt: currentTimestamp,
     };
@@ -81,7 +81,7 @@ export class RostersController {
     //
     // }));
 
-    const roster: Roster = {} as Roster;
+    const roster: RosterDescription = {} as RosterDescription;
 
     return {
       roster,

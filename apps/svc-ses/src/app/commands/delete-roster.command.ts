@@ -1,9 +1,9 @@
-import { Roster } from '../models/roster.model';
+import { RosterDescription } from '../models/roster-description.model';
 
 export type DeleteRosterCommandInput = {
   rosterId: string;
 };
 
 export type DeleteRosterCommandOutput = {
-  roster: Roster;
+  roster: RosterDescription;
 };
