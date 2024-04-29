@@ -121,9 +121,10 @@ export class EnrollmentsController {
                 }),
                 UpdateExpression: 'ADD enrollmentIds :enrollmentIds',
                 ConditionExpression:
-                  'attribute_exists(pk) AND (attribute_not_exists(enrollmentIds) OR size(enrollmentIds) < enrollmentLimit)',
+                  'attribute_exists(pk) AND (enrollmentLimit = :unlimited OR attribute_not_exists(enrollmentIds) OR size(enrollmentIds) < enrollmentLimit)',
                 ExpressionAttributeValues: marshall({
                   ':enrollmentIds': new Set([personId]),
+                  ':unlimited': 'UNLIMITED',
                 }),
               },
             },
