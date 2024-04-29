@@ -5,6 +5,7 @@ import {
   GetItemCommand,
   PutItemCommand,
   QueryCommand,
+  TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Enrollment } from '../models/enrollment.model';
@@ -26,6 +27,7 @@ import {
   GetEnrollmentCommandOutput,
 } from '../commands/get-enrollment.command';
 import { isConditionalCheckFailedException } from '../utils/is-conditional-check-failed-exception';
+import { isTransactionCanceledException } from '../utils/is-transaction-canceled-exception';
 
 const ENROLLMENT = 'ENROLLMENT';
 
@@ -109,18 +111,24 @@ export class EnrollmentsController {
 
     await this.dynamo
       .send(
-        new PutItemCommand({
-          TableName: 'local.ses-01',
-          Item: marshall({
-            pk: rosterId,
-            sk: `ENROLLMENT#${personId}`,
-            ...enrollment,
-          }),
-          ConditionExpression: 'attribute_not_exists(pk)',
+        new TransactWriteItemsCommand({
+          TransactItems: [
+            {
+              Put: {
+                TableName: 'local.ses-01',
+                Item: marshall({
+                  pk: rosterId,
+                  sk: `ENROLLMENT#${personId}`,
+                  ...enrollment,
+                }),
+                ConditionExpression: 'attribute_not_exists(pk)',
+              },
+            },
+          ],
         })
       )
       .catch((error) => {
-        if (isConditionalCheckFailedException(error)) {
+        if (isTransactionCanceledException(error)) {
           throw new BadRequestException('Enrollment Already Exists');
         }
 
