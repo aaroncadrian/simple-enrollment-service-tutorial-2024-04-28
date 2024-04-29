@@ -12,6 +12,7 @@ import {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
+  TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb';
 import {
   DeleteRosterCommandInput,
@@ -81,13 +82,30 @@ export class RostersController {
     };
 
     await this.dynamo.send(
-      new PutItemCommand({
-        TableName: 'local.ses-01',
-        Item: marshall({
-          pk: rosterId,
-          sk: 'DESCRIPTION',
-          ...rosterDescription,
-        }),
+      new TransactWriteItemsCommand({
+        TransactItems: [
+          {
+            Put: {
+              TableName: 'local.ses-01',
+              Item: marshall({
+                pk: rosterId,
+                sk: 'DESCRIPTION',
+                ...rosterDescription,
+              }),
+              ConditionExpression: 'attribute_not_exists(pk)',
+            },
+          },
+          {
+            Put: {
+              TableName: 'local.ses-01',
+              Item: marshall({
+                pk: rosterId,
+                sk: 'ENROLLMENT_TRACKER',
+                enrollmentLimit,
+              }),
+            },
+          },
+        ],
       })
     );
 
