@@ -7,8 +7,8 @@ import {
   CreateRosterCommandInput,
   CreateRosterCommandOutput,
 } from '../commands/create-roster.command';
-import { getCurrentTimestamp } from '../utils/get-current-timestamp';
 import {
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
@@ -22,9 +22,7 @@ import {
   DescribeRosterCommandInput,
   DescribeRosterCommandOutput,
 } from '../commands/describe-roster.command';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-import { stripPkSk } from '../utils/strip-pk-sk';
-import { Enrollment } from '../models/enrollment.model';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { unmarshallModel } from '../utils/unmarshall-model';
 
 @Controller()
@@ -104,14 +102,35 @@ export class RostersController {
   ): Promise<DeleteRosterCommandOutput> {
     const { rosterId } = input;
 
-    // const result = await this.dynamo.send(new DeleteItemCommand({
-    //
-    // }));
+    const result = await this.dynamo
+      .send(
+        new DeleteItemCommand({
+          ReturnValues: 'ALL_OLD',
+          TableName: 'local.ses-01',
+          Key: marshall({
+            pk: rosterId,
+            sk: 'DESCRIPTION',
+          }),
+          ConditionExpression: 'attribute_exists(#pk)',
+          ExpressionAttributeNames: {
+            '#pk': 'pk',
+          },
+        })
+      )
+      .catch((error) => {
+        if (error.name === 'ConditionalCheckFailedException') {
+          throw new BadRequestException('Roster Not Found');
+        }
 
-    const roster: RosterDescription = {} as RosterDescription;
+        throw error;
+      });
+
+    const rosterDescription = unmarshallModel<RosterDescription>(
+      result.Attributes
+    );
 
     return {
-      roster,
+      rosterDescription,
     };
   }
 }

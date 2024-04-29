@@ -5,5 +5,5 @@ export type DeleteRosterCommandInput = {
 };
 
 export type DeleteRosterCommandOutput = {
-  roster: RosterDescription;
+  rosterDescription: RosterDescription;
 };
