@@ -41,12 +41,15 @@ export class EnrollmentsController {
     const result = await this.dynamo.send(
       new QueryCommand({
         TableName: 'local.ses-01',
-        KeyConditionExpression: '#pk = :pk',
+        KeyConditionExpression:
+          '#pk = :pk AND begins_with(#sk, :enrollmentPrefix)',
         ExpressionAttributeNames: {
           '#pk': 'pk',
+          '#sk': 'sk',
         },
         ExpressionAttributeValues: marshall({
           ':pk': rosterId,
+          ':enrollmentPrefix': `${ENROLLMENT}#`,
         }),
       })
     );
