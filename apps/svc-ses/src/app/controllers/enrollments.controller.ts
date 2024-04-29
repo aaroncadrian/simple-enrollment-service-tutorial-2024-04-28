@@ -153,11 +153,13 @@ export class EnrollmentsController {
         })
       )
       .catch((error) => {
-        console.error(JSON.stringify(error, null, 2));
-
         if (isTransactionCanceledException(error)) {
           if (error.CancellationReasons[0].Code === 'ConditionalCheckFailed') {
             throw new BadRequestException('Roster Not Found');
+          }
+
+          if (error.CancellationReasons[1].Code === 'ConditionalCheckFailed') {
+            throw new BadRequestException('Enrollment Limit Exceeded');
           }
 
           if (error.CancellationReasons[2].Code === 'ConditionalCheckFailed') {
