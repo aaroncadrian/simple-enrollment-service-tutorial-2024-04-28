@@ -5,5 +5,5 @@ export type DescribeRosterCommandInput = {
 };
 
 export type DescribeRosterCommandOutput = {
-  roster: RosterDescription;
+  rosterDescription: RosterDescription;
 };

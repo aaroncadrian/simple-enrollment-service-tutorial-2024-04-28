@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import {
   ListRostersCommandInput,
   ListRostersCommandOutput,
@@ -8,7 +8,11 @@ import {
   CreateRosterCommandOutput,
 } from '../commands/create-roster.command';
 import { getCurrentTimestamp } from '../utils/get-current-timestamp';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+} from '@aws-sdk/client-dynamodb';
 import {
   DeleteRosterCommandInput,
   DeleteRosterCommandOutput,
@@ -18,7 +22,10 @@ import {
   DescribeRosterCommandInput,
   DescribeRosterCommandOutput,
 } from '../commands/describe-roster.command';
-import { marshall } from '@aws-sdk/util-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { stripPkSk } from '../utils/strip-pk-sk';
+import { Enrollment } from '../models/enrollment.model';
+import { unmarshallModel } from '../utils/unmarshall-model';
 
 @Controller()
 export class RostersController {
@@ -41,12 +48,26 @@ export class RostersController {
   ): Promise<DescribeRosterCommandOutput> {
     const { rosterId } = input;
 
-    const roster = {} as RosterDescription;
+    const result = await this.dynamo.send(
+      new GetItemCommand({
+        TableName: 'local.ses-01',
+        Key: marshall({
+          pk: rosterId,
+          sk: 'DESCRIPTION',
+        }),
+      })
+    );
 
-    // const result = await this.dynamo.send(new QueryCommand({}));
+    const item = result.Item;
+
+    if (!item) {
+      throw new BadRequestException('Roster Not Found');
+    }
+
+    const rosterDescription = unmarshallModel<RosterDescription>(item);
 
     return {
-      roster,
+      rosterDescription,
     };
   }
 
