@@ -110,16 +110,7 @@ export class EnrollmentsController {
       .send(
         new TransactWriteItemsCommand({
           TransactItems: [
-            {
-              ConditionCheck: {
-                TableName: 'local.ses-01',
-                Key: marshall({
-                  pk: rosterId,
-                  sk: 'DESCRIPTION',
-                }),
-                ConditionExpression: 'attribute_exists(pk)',
-              },
-            },
+            // Enforce roster existence and enrollment limit
             {
               Update: {
                 ReturnValuesOnConditionCheckFailure: 'ALL_OLD',
@@ -130,12 +121,13 @@ export class EnrollmentsController {
                 }),
                 UpdateExpression: 'ADD enrollmentIds :enrollmentIds',
                 ConditionExpression:
-                  'attribute_not_exists(enrollmentIds) OR size(enrollmentIds) < enrollmentLimit',
+                  'attribute_exists(pk) AND (attribute_not_exists(enrollmentIds) OR size(enrollmentIds) < enrollmentLimit)',
                 ExpressionAttributeValues: marshall({
                   ':enrollmentIds': new Set([personId]),
                 }),
               },
             },
+            // Create enrollment
             {
               Put: {
                 TableName: 'local.ses-01',
@@ -153,14 +145,14 @@ export class EnrollmentsController {
       .catch((error) => {
         if (isTransactionCanceledException(error)) {
           if (error.CancellationReasons[0].Code === 'ConditionalCheckFailed') {
-            throw new BadRequestException('Roster Not Found');
+            if (error.CancellationReasons[0].Item) {
+              throw new BadRequestException('Enrollment Limit Exceeded');
+            } else {
+              throw new BadRequestException('Roster Not Found');
+            }
           }
 
           if (error.CancellationReasons[1].Code === 'ConditionalCheckFailed') {
-            throw new BadRequestException('Enrollment Limit Exceeded');
-          }
-
-          if (error.CancellationReasons[2].Code === 'ConditionalCheckFailed') {
             throw new BadRequestException('Enrollment Already Exists');
           }
         }
